@@ -1,14 +1,16 @@
 package swagger
 
 import (
+	"net/http"
 	"testing"
 
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_createHTML(t *testing.T) {
 	type args struct {
-		param Parameter
+		param *Parameter
 	}
 	tests := []struct {
 		name    string
@@ -19,7 +21,7 @@ func Test_createHTML(t *testing.T) {
 		{
 			name: "All Parameter",
 			args: args{
-				param: Parameter{
+				param: &Parameter{
 					Favicon: "favicon.ico",
 					SpecURL: "http://example.com",
 					Title:   "Test Document",
@@ -31,7 +33,7 @@ func Test_createHTML(t *testing.T) {
 		{
 			name: "No Title",
 			args: args{
-				param: Parameter{
+				param: &Parameter{
 					Favicon: "favicon.ico",
 					SpecURL: "http://example.com",
 					Title:   "",
@@ -43,7 +45,7 @@ func Test_createHTML(t *testing.T) {
 		{
 			name: "No Favicon",
 			args: args{
-				param: Parameter{
+				param: &Parameter{
 					Favicon: "",
 					SpecURL: "http://example.com",
 					Title:   "",
@@ -62,5 +64,19 @@ func Test_createHTML(t *testing.T) {
 			}
 			assert.Equal(t, tt.want, got)
 		})
+	}
+}
+
+func ExampleHTTPHandleFunc() {
+	if err := http.ListenAndServe(":1202", HTTPHandleFunc("http://localhost:1324/docs/spec")); err != nil {
+		panic(err)
+	}
+}
+
+func ExampleEchoHandleFunc() {
+	e := echo.New()
+	e.GET("/docs", EchoHandleFunc("/docs/spec", WithTitle("Example")))
+	if err := e.Server.ListenAndServe(); err != nil {
+		panic(err)
 	}
 }

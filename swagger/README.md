@@ -14,6 +14,28 @@
 go get github.com/realsangil/gopkg/swagger
 ```
 
+## Usage
+
+### Go Standard HTTP package
+```go
+func main() {
+  if err := http.ListenAndServe(":1202", HTTPHandleFunc("https://petstore.swagger.io/v2/swagger.json")); err != nil {
+		panic(err)
+	}
+}
+```
+
+### Echo framework
+```go
+func main() {
+  e := echo.New()
+	e.GET("/docs", EchoHandleFunc("/v2/swagger.json", WithTitle("Example")))
+	if err := e.Server.ListenAndServe(); err != nil {
+		panic(err)
+	}
+}
+```
+
 ## Run tests
 
 ```sh

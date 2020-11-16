@@ -47,10 +47,7 @@ func EchoHandleFunc(specURL string, opts ...ParameterOption) echo.HandlerFunc {
 }
 
 func createHTML(param *Parameter) ([]byte, error) {
-	tmpl, err := template.New("swagger").Parse(html)
-	if err != nil {
-		return nil, err
-	}
+	tmpl := template.Must(template.New("swagger").Parse(html))
 	buf := bytes.NewBuffer(nil)
 	if err := tmpl.Execute(buf, param); err != nil {
 		return nil, err
