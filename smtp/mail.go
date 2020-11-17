@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"mime"
+	"regexp"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -14,6 +15,8 @@ const (
 	ErrMalformedAddress = Error("malformed address")
 	ErrUndefinedCharset = Error("undefined charset")
 )
+
+var regexpAddress = regexp.MustCompile(`(.*)\<(.+)\>`)
 
 type Mail struct {
 	From        Address
@@ -37,24 +40,26 @@ func (a Address) String() string {
 	return fmt.Sprintf("%s <%s>", mime.BEncoding.Encode("UTF-8", a.Name), a.Address)
 }
 
-func ParseAddress(str string) (Address, error) {
-	if str == "" {
-		return Address{}, ErrEmptyAddress
-	}
-	s := strings.Split(str, " ")
-	switch len(s) {
-	case 1:
-		return Address{Address: str}, nil
-	case 2:
-		dec := new(mime.WordDecoder)
-		name, err := dec.DecodeHeader(s[0])
-		if err != nil {
-			return Address{}, errors.Wrap(err, "failed to decode name")
+func ParseAddress(addresses ...string) ([]Address, error) {
+	var result []Address
+	for _, addr := range addresses {
+		if addr == "" {
+			return nil, ErrEmptyAddress
 		}
-		return Address{Name: name, Address: strings.TrimSuffix(strings.TrimPrefix(strings.TrimSpace(s[1]), "<"), ">")}, nil
-	default:
-		return Address{}, ErrMalformedAddress
+		s := regexpAddress.FindStringSubmatch(addr)
+		switch len(s) {
+		case 3:
+			dec := new(mime.WordDecoder)
+			name, err := dec.DecodeHeader(strings.TrimSpace(s[1]))
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to decode header")
+			}
+			result = append(result, Address{Name: name, Address: s[2]})
+		default:
+			result = append(result, Address{Address: addr})
+		}
 	}
+	return result, nil
 }
 
 type ContentType int

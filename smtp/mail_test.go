@@ -55,62 +55,100 @@ func TestAddress_String(t *testing.T) {
 
 func TestParseAddress(t *testing.T) {
 	type args struct {
-		str string
+		addresses []string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    Address
+		want    []Address
 		wantErr bool
 	}{
 		{
 			name: "박상일 <psi59@lalaworks.com>",
-			args: args{str: "=?UTF-8?b?67CV7IOB7J28?= <psi59@lalaworks.com>"},
-			want: Address{
-				Name:    "박상일",
-				Address: "psi59@lalaworks.com",
+			args: args{
+				addresses: []string{"=?UTF-8?b?67CV7IOB7J28?= <psi59@lalaworks.com>"},
+			},
+			want: []Address{
+				{
+					Name:    "박상일",
+					Address: "psi59@lalaworks.com",
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "Sangil <psi59@lalaworks.com>",
-			args: args{str: "Sangil <psi59@lalaworks.com>"},
-			want: Address{
-				Name:    "Sangil",
-				Address: "psi59@lalaworks.com",
+			args: args{addresses: []string{"Sangil <psi59@lalaworks.com>"}},
+			want: []Address{
+				{
+					Name:    "Sangil",
+					Address: "psi59@lalaworks.com",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "multiple address",
+			args: args{
+				addresses: []string{
+					"=?UTF-8?b?67CV7IOB7J28?= <psi59@lalaworks.com>",
+					"Sangil <psi59@lalaworks.com>",
+				},
+			},
+			want: []Address{
+				{
+					Name:    "박상일",
+					Address: "psi59@lalaworks.com",
+				},
+				{
+					Name:    "Sangil",
+					Address: "psi59@lalaworks.com",
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "psi59@lalaworks.com",
-			args: args{str: "psi59@lalaworks.com"},
-			want: Address{
-				Name:    "",
-				Address: "psi59@lalaworks.com",
+			args: args{addresses: []string{"psi59@lalaworks.com"}},
+			want: []Address{
+				{
+					Name:    "",
+					Address: "psi59@lalaworks.com",
+				},
 			},
 			wantErr: false,
 		},
 		{
+			name:    "empty addresses",
+			args:    args{addresses: []string{}},
+			want:    nil,
+			wantErr: false,
+		},
+		{
 			name:    "empty string",
-			args:    args{str: ""},
-			want:    Address{},
+			args:    args{addresses: []string{""}},
+			want:    nil,
 			wantErr: true,
 		},
 		{
 			name: "invalid header",
 			args: args{
-				str: "=?UTF-8?b?invalid7IOB7J28?= <psi59@lalaworks.com>",
+				addresses: []string{
+					"=?UTF-8?b?invalid7IOB7J28?= <psi59@lalaworks.com>",
+				},
 			},
-			want: Address{
-				Name:    "=?UTF-8?b?invalid7IOB7J28?=",
-				Address: "psi59@lalaworks.com",
+			want: []Address{
+				{
+					Name:    "=?UTF-8?b?invalid7IOB7J28?=",
+					Address: "psi59@lalaworks.com",
+				},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseAddress(tt.args.str)
+			got, err := ParseAddress(tt.args.addresses...)
 			t.Logf("err=%v, address=%#v", err, got)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseAddress() error = %v, wantErr %v", err, tt.wantErr)
